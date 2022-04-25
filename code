@@ -9,7 +9,9 @@ library(vegan)
 library(lessR)
 library(ggcorrplot)
 library(hrbrthemes)
-
+library(devtools)
+library(factoextra)
+library(FactoMineR)
 
 
 # Reading the clinical data
@@ -212,3 +214,34 @@ corrplot(cor.mat.clin.morph[,0:9], method='number', addCoef.col = 'black')
 corrplot(cor.mat.clin.morph[,0:9], addCoef.col = 'black', tl.pos = 'd',
          cl.pos = 'n')
 
+#PCA analysis
+#create a dataset containing only numerical values
+num.data <- clinical.data[,-c(1,6,7,9,10,11)]
+
+#pca with printed correlation circle
+pca <- PCA(num.data, graph = TRUE)
+#print the pca
+plot(pca$ind$coord)
+#print eigenvalues
+print(pca$eig)
+#scree plot
+fviz_eig(pca, addlabels = TRUE, ylim = c(0, 50))
+
+#print the PCA with coloured Cohort
+cohorts <- clinical.data$COHORT
+colors <- rep("red",length(cohorts))
+colors[cohorts == "Organ Donor (OPO)"] <- "black"
+plot(pca$ind$coord,col=colors,pch=19,cex=0.6)
+legend("bottomright", legend=c("Organ Donor (OPO)", "Postmortem"),
+       col=c("black", "red"), pch=19, cex=0.6)
+
+#print the PCA with coloured hardy scale
+hardy <- clinical.data$DTHHRDY
+colors <- rep("black",length(hardy))
+colors[hardy == 1] <- "red"
+colors[hardy == 2] <- "green"
+colors[hardy == 3] <- "blue"
+colors[hardy == 4] <- "cyan"
+plot(pca$ind$coord,col=colors,pch=19,cex=0.6)
+legend("bottomright", legend=c("0", "1","2","3","4"),
+       col=c("black", "red","green","blue","cyan"), pch=19, cex=0.6)
