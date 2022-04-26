@@ -245,3 +245,27 @@ colors[hardy == 4] <- "cyan"
 plot(pca$ind$coord,col=colors,pch=19,cex=0.6)
 legend("bottomright", legend=c("0", "1","2","3","4"),
        col=c("black", "red","green","blue","cyan"), pch=19, cex=0.6)
+       
+############### Question 2 (Deseq): 
+
+# create the deseqdataset object, change variable design for every variable in clinical.data (Age, Hght etc)
+dds <- DESeqDataSetFromMatrix(countData=t(morphological.counts), 
+                              colData=clinical.data, 
+                              design=~WGHT)
+dds <- DESeq(dds)
+
+# compute and visualize results
+resultsNames(dds)
+res <- results(dds)
+res
+mcols(res, use.names=TRUE)
+
+#let's look at the results table
+head(results(dds, tidy=TRUE))
+
+# order results table according to the adjusted p-value; take the first 10 lines with the lowest padj
+res <- res[order(res$padj),]
+head(res, 10)
+
+# plot
+plotMA(res)
