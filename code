@@ -354,3 +354,16 @@ sorted_padj <- res[sort(res$padj, index.return = TRUE)$ix,]
 rownames(sorted_padj)[sorted_padj$padj < 0.05]
 sorted_padj[sorted_padj$padj < 0.05,]
 
+dds <- DESeqDataSetFromMatrix(countData = t(morphological.counts),
+                              colData = clinical.data, 
+                              design = ~AGE+TRISCHD+DTHHRDY)
+dds <- DESeq(dds)
+res <- results(dds)
+VarvsMorpho[,i] <- res$padj
+plotMA(res, main = "~AGE + TRISCHD + DTHHRDY")
+plot(res$padj)
+abline(h = 0.05, col = "red")
+sorted_padj <- res[sort(res$padj, index.return = TRUE)$ix,]
+rownames(sorted_padj)[sorted_padj$padj < 0.05]
+print(sort(res$padj, index.return = TRUE)$ix)
+sorted_padj[sorted_padj$padj < 0.05,]
