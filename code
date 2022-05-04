@@ -202,6 +202,33 @@ legend("bottomright",
        legend = levels(factor(HardyScale)),
        pch = 19,
        col = factor(levels(factor(HardyScale))))
+       
+#Grouped barplot for COHORT and DTHHRDY
+
+clinical.data$DTHHRDY <- as.factor(clinical.data$DTHHRDY)
+clinical.data$COHORT <- as.factor(clinical.data$COHORT)
+
+compare_table <- table(clinical.data$COHORT,clinical.data$DTHHRDY)
+
+barplot(compare_table,main="Hardy scale",
+        col=c("black","red"),beside=TRUE)
+legend("topright", legend=c("Organ Donor (OPO)", "Postmortem"),
+       col=c("black", "red"), pch=19, cex=0.6)
+
+#Chi-squared test
+
+ventilator <- rep(NA,nrow(clinical.data))
+for (i in 1:nrow(clinical.data)){
+  if (clinical.data$DTHHRDY[i] == 0){
+    ventilator[i] <- 0
+  }
+  else{
+    ventilator[i] <- 1
+  }
+}
+
+chisq.test(clinical.data$COHORT,ventilator)       
+       
 
 ## Plotting the scatter plot of correlation between the Age and all 
 ## the variables in the morphological.count variable. 
