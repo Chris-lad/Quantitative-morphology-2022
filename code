@@ -97,9 +97,9 @@ shapiro.test(IschemicTime)
 # Shapiro test for Weight
 shapiro.test(Weight)
 
-## THE SHAPIRO-TEST CONFIRMED THAT NONE OF THE CLINICAL VARIABLE IS 
+## THE SHAPIRO-TEST CONFIRMED THAT NONE OF THE CLINICAL VARIABLE ARE
 ## NORMALLY DISTRIBUTED AS ALL THE P-VALUES WERE VERY VERY LOW.
-## WE CAN NOT ASSUME NORMALITY FOR THIS VARIABLES
+## WE CAN NOT ASSUME NORMALITY FOR THESE VARIABLES
 
 
 ## Printing the contingency table of the categorical variables 
@@ -320,10 +320,9 @@ for (i in releventVars){
 
 for (i in releventVars){
   plot(VarvsMorpho[,i], main = names(clinical.data)[i])
-  abline(h = 0.05, col = "red")
+  abline(h = 0.1, col = "red")
 }
 
-#Prendre en compte les variables confondues ou correlees
 
 dds <- DESeqDataSetFromMatrix(countData = t(morphological.counts),
                               colData = clinical.data, 
@@ -333,25 +332,25 @@ res <- results(dds)
 VarvsMorpho[,i] <- res$padj
 plotMA(res, main = "~AGE + COHORT + TRISCHD")
 plot(res$padj)
-abline(h = 0.05, col = "red")
+abline(h = 0.1, col = "red")
 sorted_padj <- res[sort(res$padj, index.return = TRUE)$ix,]
-rownames(sorted_padj)[sorted_padj$padj < 0.05]
-sorted_padj[sorted_padj$padj < 0.05,]
+rownames(sorted_padj)[sorted_padj$padj < 0.1]
+sorted_padj[sorted_padj$padj < 0.1,]
 
 
 
 dds <- DESeqDataSetFromMatrix(countData = t(morphological.counts),
                               colData = clinical.data, 
-                              design ~BMI + WGHT)
+                              design = ~BMI + WGHT + HGHT)
 dds <- DESeq(dds)
 res <- results(dds)
 VarvsMorpho[,i] <- res$padj
-plotMA(res, main = "~BMI + WGHT")
+plotMA(res, main = "~BMI + WGHT + HGHT")
 plot(res$padj)
-abline(h = 0.05, col = "red")
+abline(h = 0.1, col = "red")
 sorted_padj <- res[sort(res$padj, index.return = TRUE)$ix,]
-rownames(sorted_padj)[sorted_padj$padj < 0.05]
-sorted_padj[sorted_padj$padj < 0.05,]
+rownames(sorted_padj)[sorted_padj$padj < 0.1]
+sorted_padj[sorted_padj$padj < 0.1,]
 
 dds <- DESeqDataSetFromMatrix(countData = t(morphological.counts),
                               colData = clinical.data, 
@@ -361,25 +360,10 @@ res <- results(dds)
 VarvsMorpho[,i] <- res$padj
 plotMA(res, main = "~AGE + COHORT + TRISCHD")
 plot(res$padj)
-abline(h = 0.05, col = "red")
+abline(h = 0.1, col = "red")
 sorted_padj <- res[sort(res$padj, index.return = TRUE)$ix,]
-rownames(sorted_padj)[sorted_padj$padj < 0.05]
-sorted_padj[sorted_padj$padj < 0.05,]
-
-
-
-dds <- DESeqDataSetFromMatrix(countData = t(morphological.counts),
-                              colData = clinical.data, 
-                              design = ~BMI + WGHT)
-dds <- DESeq(dds)
-res <- results(dds)
-VarvsMorpho[,i] <- res$padj
-plotMA(res, main = "~BMI + WGHT")
-plot(res$padj)
-abline(h = 0.05, col = "red")
-sorted_padj <- res[sort(res$padj, index.return = TRUE)$ix,]
-rownames(sorted_padj)[sorted_padj$padj < 0.05]
-sorted_padj[sorted_padj$padj < 0.05,]
+rownames(sorted_padj)[sorted_padj$padj < 0.1]
+sorted_padj[sorted_padj$padj < 0.1,]
 
 dds <- DESeqDataSetFromMatrix(countData = t(morphological.counts),
                               colData = clinical.data, 
@@ -389,8 +373,22 @@ res <- results(dds)
 VarvsMorpho[,i] <- res$padj
 plotMA(res, main = "~AGE + TRISCHD + DTHHRDY")
 plot(res$padj)
-abline(h = 0.05, col = "red")
+abline(h = 0.1, col = "red")
 sorted_padj <- res[sort(res$padj, index.return = TRUE)$ix,]
-rownames(sorted_padj)[sorted_padj$padj < 0.05]
+rownames(sorted_padj)[sorted_padj$padj < 0.1]
 print(sort(res$padj, index.return = TRUE)$ix)
-sorted_padj[sorted_padj$padj < 0.05,]
+sorted_padj[sorted_padj$padj < 0.1,]
+sorted_padj[61,]
+
+dds <- DESeqDataSetFromMatrix(countData = t(morphological.counts),
+                              colData = clinical.data, 
+                              design = ~BMI + WGHT)
+dds <- DESeq(dds)
+res <- results(dds)
+VarvsMorpho[,i] <- res$padj
+plotMA(res, main = "~BMI + WGHT")
+plot(res$padj)
+abline(h = 0.1, col = "red")
+sorted_padj <- res[sort(res$padj, index.return = TRUE)$ix,]
+rownames(sorted_padj)[sorted_padj$padj < 0.1]
+sorted_padj[sorted_padj$padj < 0.1,]
