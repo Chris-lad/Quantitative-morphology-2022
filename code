@@ -299,30 +299,35 @@ plotMA(res)
 
 #Version automatique, teste toutes les variables, imprime deux types de plots: padj et log2fold vs mean et stocke valeurs dans une data.frame
 
+releventVars <- c(2,3,4,5,7,8,9)
 VarvsMorpho <- data.frame(matrix(
   NA, nrow = ncol(morphological.counts),
-  ncol = ncol(clinical.data)
+  ncol = length(releventVars)
 ))
 rownames(VarvsMorpho) <- names(morphological.counts)
-names(VarvsMorpho) <- names(clinical.data)
-releventVars <- c(2,3,4,5,7,8,9)
-for (i in releventVars){
-  form <- as.formula(paste("~",names(clinical.data)[i]))
-  print(names(clinical.data)[i])
+names(VarvsMorpho) <- names(clinical.data)[releventVars]
+for (i in 1:length(releventVars)){
+  current_var <- releventVars[i]
+  form <- as.formula(paste("~",names(clinical.data)[current_var]))
   dds <- DESeqDataSetFromMatrix(countData = t(morphological.counts),
                                 colData = clinical.data, 
                                 design=form)
   dds <- DESeq(dds)
   res <- results(dds)
   VarvsMorpho[,i] <- res$padj
-  plotMA(res)
+  plotMA(res,main=names(clinical.data)[current_var])
+  print(names(clinical.data)[current_var])
+  sorted_padj <- na.omit(res[sort(res$padj, index.return = TRUE)$ix,])
+  print(rownames(sorted_padj)[sorted_padj$padj < 0.1])
 }
 
-for (i in releventVars){
-  plot(VarvsMorpho[,i], main = names(clinical.data)[i])
+
+for (i in 1:ncol(VarvsMorpho)){
+  plot(VarvsMorpho[,i], main = names(VarvsMorpho)[i],
+       ylab="Adjusted p-value", xlab="Morphological cluster"
+      )
   abline(h = 0.1, col = "red")
 }
-
 
 dds <- DESeqDataSetFromMatrix(countData = t(morphological.counts),
                               colData = clinical.data, 
