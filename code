@@ -344,3 +344,30 @@ plotMA(res, main = "~AGE + COHORT + TRISCHD")
 plot(res$padj)
 abline(h = 0.1, col = "red")
 sign_padj(res)
+
+#Correlations des clusters: variables confondues
+
+#fonction replaceNames cree une liste de noms correspondants au chiffre du cluster, plutot que le nom entier
+replaceNames <- function(df){
+  futureNames <- rep(NA,ncol(df))
+  for (i in 1:ncol(df)){
+    currentName <- names(df)[i]
+    n <- nchar(currentName)
+    if (n == 22){
+      futureNames[i] <- substr(currentName,n,n)
+    }
+    else{
+      futureNames[i] <- substr(currentName,n-1,n)
+    }
+  }
+  return(futureNames)
+}
+
+confMorphs <- morphological.counts[,unlist(morphs[[8]])]
+names(confMorphs) <- replaceNames(confMorphs)
+cor.test(morphological.counts$Mophological.cluster.50,morphological.counts$Mophological.cluster.23)
+corrplot(cor(confMorphs,method="spearman"))
+correlation = cor(confMorphs, method = "spearman")
+correlation <- round(correlation,2)
+corrplot(correlation, order = 'AOE', addCoef.col = 'black', tl.pos = 'd',
+         cl.pos = 'n', col = COL2('PiYG'))
