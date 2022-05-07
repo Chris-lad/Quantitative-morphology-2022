@@ -109,7 +109,7 @@ shapiro.test(Weight)
 bartlett.test(list(Age, BMI, Height, Weight, IschemicTime))
 
 ## Printing the contingency table of the categorical variables 
-##  and  
+
 table(Cohort)
 table(HardyScale)
 
