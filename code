@@ -173,6 +173,13 @@ abline(lm(Age ~ IschemicTime), col = "red", lwd = 3)
 
 ############ PART 3.3: Confounding clinical variables
 
+# Test de Wilcoxon-Whithney de l'age et de la cohorte
+# The post-mortem patients are older than the Organ Donor patients
+boxplot(Age ~ Cohort)
+# Test of Wilcoxon Mann-Withney <- Les Deux groupes sont bien différents car rejet de H0
+# H0 = 2 populations (observations) sont elles les memes ? 
+wilcox.test(Age ~ Cohort, data=ToothGrowth)
+
 # --> Useless # A basic scatterplot BMI vs Weight with color
 #     depending on donor type
 ggplot(clinical.data, aes(x=BMI, y=WGHT, color=COHORT)) + 
