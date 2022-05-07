@@ -243,8 +243,26 @@ barplot(compare_table,main="Hardy scale",
 legend("topright", legend=c("Organ Donor (OPO)", "Postmortem"),
        col=c("black", "red"), pch=19, cex=0.6)
 
-#Chi-squared test
+#nearly all organ donors are of hardy scale 0
+#nearly all patients of hardy scale 0 are organ donors
+#How many organ donors have a hardy scale value different than 0?
+organs_not0 <- subset(clinical.data,
+                      Cohort == "Organ Donor (OPO)" & HardyScale != 0)
+print(nrow(organs_not0))
+#How many patients of hardy scale 0 are postmortem donors?
+hardy0_PM <- subset(clinical.data,
+                    Cohort == "Postmortem" & HardyScale == 0)
+print(nrow(hardy0_PM))
+#How many organ donors?
+organs <- subset(clinical.data,Cohort == "Organ Donor (OPO)")
+print(nrow(organs))
+#How many patients of hardy scale 0?
+hardy0 <- subset(clinical.data,HardyScale == 0)
+print(nrow(hardy0))
 
+#Chi-squared test
+#create a variable ventilator which is equal to 0 if DTHHRDY 
+#is 0 and is equal to 1 otherwise
 ventilator <- rep(NA,nrow(clinical.data))
 for (i in 1:nrow(clinical.data)){
   if (clinical.data$DTHHRDY[i] == 0){
@@ -255,7 +273,12 @@ for (i in 1:nrow(clinical.data)){
   }
 }
 
-chisq.test(clinical.data$COHORT,ventilator)       
+chisq.test(clinical.data$COHORT,ventilator) 
+#a very small p-value (much smaller than 0.05) indicates that
+#we may reject the H0 hypothesis = the variables are independent
+#The two variables are therefore not independent
+#the events DTHHRDY = 0 and COHORT = "Organ Donor (OPO)" are
+#not independent     
        
 
 ## Plotting the scatter plot of correlation between the Age and all 
