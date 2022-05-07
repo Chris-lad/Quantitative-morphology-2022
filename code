@@ -20,7 +20,7 @@ clinical.data = read.delim(file='clinical-data.tsv',sep ='\t',header=TRUE,row.na
 # Reading the morphological counts, taking as rownames the unique IDs of the organs (SMPLID)
 morphological.counts = read.delim(file='morphological-counts.tsv',sep='\t',header=TRUE,row.names=1)
 
-# Reading the RNA-read-counts
+# Reading the RNA-read-counts, taking as rownames the unique IDs of the genes (ENSEMBL ID)
 RNA.read.counts = read.delim(file='RNA-read-counts.tsv',sep='\t',header=TRUE,row.names=1)
 
 # Reading the gmt file
@@ -48,12 +48,14 @@ any(is.na(Weight))
 any(is.na(Sex))
 
 
-#### PART 3
+#### PART 3 (Question 1)
 
 ############ PART 3.1: DISTRIBUTION OF THE CLINICAL VARIABLES 
 
-# histogram of the sex distribution
-# WE ONLY HAVE MEN IN OUR DATASET
+# Checking that we only have men in our dataset
+men.data <- subset(clinical.data,Sex == 1)
+print(nrow(men.data) == nrow(clinical.data)) 
+#we still have just as many rows in each dataset, ie no organs were removed due to having belonged to a woman -> there are only men
 
 # histogram of the age
 hist(Age)
