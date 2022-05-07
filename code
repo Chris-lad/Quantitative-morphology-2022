@@ -178,7 +178,7 @@ abline(lm(Age ~ IschemicTime), col = "red", lwd = 3)
 boxplot(Age ~ Cohort)
 # Test of Wilcoxon Mann-Withney <- Les Deux groupes sont bien différents car rejet de H0
 # H0 = 2 populations (observations) sont elles les memes ? 
-wilcox.test(Age ~ Cohort, data=ToothGrowth)
+wilcox.test(Age ~ Cohort)
 
 # --> Useless # A basic scatterplot BMI vs Weight with color
 #     depending on donor type
