@@ -173,12 +173,19 @@ abline(lm(Age ~ IschemicTime), col = "red", lwd = 3)
 
 ############ PART 3.3: Confounding clinical variables
 
+###### 1- Vérification du biais 1! 
 # Test de Wilcoxon-Whithney de l'age et de la cohorte
 # The post-mortem patients are older than the Organ Donor patients
-boxplot(Age ~ Cohort)
+boxplot(clinical.data$AGE ~ clinical.data$COHORT)
 # Test of Wilcoxon Mann-Withney <- Les Deux groupes sont bien différents car rejet de H0
 # H0 = 2 populations (observations) sont elles les memes ? 
-wilcox.test(Age ~ Cohort)
+wilcox.test(clinical.data$AGE ~ clinical.data$COHORT)
+
+# Boxplot du temps ischémique en fonction de la cohort
+# On voit une tendance des post-mortem à avoir un temps ischémique plus long. 
+boxplot(clinical.data$TRISCHD~ clinical.data$COHORT)
+# Vérification de cette tendance avec un test de Wilcoxon-Mann-Whitney
+wilcox.test(clinical.data$TRISCHD ~ clinical.data$COHORT)
 
 # --> Useless # A basic scatterplot BMI vs Weight with color
 #     depending on donor type
