@@ -124,8 +124,6 @@ barplot(table(Cohort), xlab = 'Type of donor',
         ylab = 'count', col='blue')
 
 
-
-
 ############ PART 3.2: Correlations between clinical variables
 
 # Visualization of the relation between variables
@@ -148,14 +146,18 @@ corrplot(correlation, order = 'AOE', addCoef.col = 'black', tl.pos = 'd',
 # Scatter plot btw Weight and BMI and linear regression line.
 plot(BMI, Weight, pch = 16)
 abline(lm(Weight ~ BMI), col = "red", lwd = 3)
+#Correlation test
+cor.test(Weight,BMI,method = "spearman")
 
 # Scatter plot btw Weight and Height and linear regression line.
 plot(Weight, Height, pch = 16)
 abline(lm(Height ~ Weight), col = "red", lwd = 3)
+#Correlation test
 
 # Scatter plot btw Age and Ischemic time and linear regression line.
 plot(IschemicTime, Age, pch = 16)
 abline(lm(Age ~ IschemicTime), col = "red", lwd = 3)
+#Correlation test
 
 ############ PART 3.3: Confounding clinical variables
 
