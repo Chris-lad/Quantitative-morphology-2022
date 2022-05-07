@@ -101,18 +101,17 @@ shapiro.test(IschemicTime)
 # Shapiro test for Weight
 shapiro.test(Weight)
 
-## THE SHAPIRO-TEST CONFIRMED THAT NONE OF THE CLINICAL VARIABLE ARE
+## THE SHAPIRO-TEST CONFIRMED THAT NONE OF THE CLINICAL VARIABLE, EXCEPT FOR WGHT, ARE
 ## NORMALLY DISTRIBUTED AS ALL THE P-VALUES WERE VERY VERY LOW.
 ## WE CAN NOT ASSUME NORMALITY FOR THESE VARIABLES
 
-### Barlett test to verify the homogeneity of variances between the 5 variables
+### Barlett test to verify the homogeneity of variances between the 5 non-constant variables (excluding SEX, which has a variance of 0)
 bartlett.test(list(Age, BMI, Height, Weight, IschemicTime))
 
 ## Printing the contingency table of the categorical variables 
 ##  and  
 table(Cohort)
 table(HardyScale)
-
 
 
 ## Creating barplot Hardy Scale
@@ -127,7 +126,7 @@ barplot(table(Cohort), xlab = 'Type of donor',
 
 
 
-############ PART 3.1: Correlations between clinical variables
+############ PART 3.2: Correlations between clinical variables
 
 # Visualization of the relation between variables
 #pairs(clinical_data) #--> ain't working bc variables(are not integer)
@@ -141,13 +140,11 @@ correlation = cor(num.var, method = "spearman")
 correlation <- round(correlation,2)
 print(correlation)
 
-
 # Correlogram is a graph of correlation matrix
-
+corrplot(correlation) #with just colours
 corrplot(correlation, order = 'AOE', addCoef.col = 'black', tl.pos = 'd',
-         cl.pos = 'n', col = COL2('PiYG'))
+         cl.pos = 'n', col = COL2('PiYG')) #with colours and values
 
- 
 # Scatter plot btw Weight and BMI and linear regression line.
 plot(BMI, Weight, pch = 16)
 abline(lm(Weight ~ BMI), col = "red", lwd = 3)
@@ -160,10 +157,7 @@ abline(lm(Height ~ Weight), col = "red", lwd = 3)
 plot(IschemicTime, Age, pch = 16)
 abline(lm(Age ~ IschemicTime), col = "red", lwd = 3)
 
-# Are there confounding variables ? 
-# Verification to detect the possible bias. 
-
-
+############ PART 3.3: Confounding clinical variables
 
 # --> Useless # A basic scatterplot BMI vs Weight with color
 #     depending on donor type
