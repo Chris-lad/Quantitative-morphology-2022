@@ -259,6 +259,10 @@ print(nrow(organs))
 #How many patients of hardy scale 0?
 hardy0 <- subset(clinical.data,HardyScale == 0)
 print(nrow(hardy0))
+#What percentage of organ donors aren't of hardy scale 0?
+print(nrow(organs_not0)/nrow(organs)*100)
+#What percentage of patients of hardy scale 0 aren't organ donors?
+print(nrow(hardy0_PM)/nrow(hardy0)*100)
 
 #Chi-squared test
 #create a variable ventilator which is equal to 0 if DTHHRDY 
