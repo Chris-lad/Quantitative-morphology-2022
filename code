@@ -101,6 +101,8 @@ shapiro.test(Weight)
 ## NORMALLY DISTRIBUTED AS ALL THE P-VALUES WERE VERY VERY LOW.
 ## WE CAN NOT ASSUME NORMALITY FOR THESE VARIABLES
 
+### Barlett test to verify the homogeneity of variances between the 5 variables
+bartlett.test(list(Age, BMI, Height, Weight, IschemicTime))
 
 ## Printing the contingency table of the categorical variables 
 ##  and  
