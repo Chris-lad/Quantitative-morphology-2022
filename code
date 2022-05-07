@@ -57,23 +57,24 @@ men.data <- subset(clinical.data,Sex == 1)
 print(nrow(men.data) == nrow(clinical.data)) 
 #we still have just as many rows in each dataset, ie no organs were removed due to having belonged to a woman -> there are only men
 
-# histogram of the age
+# histogram of the Age, with mean and median lines
 hist(Age)
 abline(v=mean(Age),col="red",lwd=2)
+abline(v=median(Age),col="blue",lwd=2)
 
-# histogram of Height
+# histogram of Height, with mean line
 hist(Height)
 abline(v=mean(Height),col="red",lwd=2)
 
-# histogram of Weight
+# histogram of Weight, with mean line
 hist(Weight)
 abline(v=mean(Weight),col="red",lwd=2)
 
-# Histogram of BMI
+# histogram of BMI, with mean line
 hist(BMI)
 abline(v=mean(BMI),col="red",lwd=2)
 
-# histogram of the Ischemic time
+# histogram of the Ischemic time, with mean line
 hist(IschemicTime, xlab='Ischemic Time (min)')
 abline(v=mean(IschemicTime),col="red",lwd=2)
 
