@@ -61,6 +61,18 @@ print(nrow(men.data) == nrow(clinical.data))
 hist(Age)
 abline(v=mean(Age),col="red",lwd=2)
 abline(v=median(Age),col="blue",lwd=2)
+text(x = 30,
+     y = 20, 
+     paste("Mean =", round(mean(Age))),
+     col = "red",
+     cex = 1)
+  
+text(x = 30,
+     y = 22,
+     paste("Median =", round(median(Age))),
+     col = "blue",
+     cex = 1)
+     
 print(median(Age))
 
 # histogram of Height, with mean line
