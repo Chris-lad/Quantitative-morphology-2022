@@ -236,6 +236,8 @@ clinical.data$DTHHRDY <- as.factor(clinical.data$DTHHRDY)
 clinical.data$COHORT <- as.factor(clinical.data$COHORT)
 
 compare_table <- table(clinical.data$COHORT,clinical.data$DTHHRDY)
+# Shows the proportion of type of donors characterized by a given Hardy scale. 
+print(compare_table)
 
 barplot(compare_table,main="Hardy scale",
         col=c("black","red"),beside=TRUE)
