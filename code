@@ -14,14 +14,14 @@ library(factoextra)
 library(FactoMineR)
 
 
-# Reading the clinical data
-clinical.data = read.delim(file='clinical-data.tsv',sep ='\t',header=TRUE)
+# Reading the clinical data, taking as rownames the unique IDs of the organs (SMPLID)
+clinical.data = read.delim(file='clinical-data.tsv',sep ='\t',header=TRUE,row.names=1)
 
-# Reading the morphological counts
-morphological.counts = read.delim(file='morphological-counts.tsv',sep='\t',header=TRUE)
+# Reading the morphological counts, taking as rownames the unique IDs of the organs (SMPLID)
+morphological.counts = read.delim(file='morphological-counts.tsv',sep='\t',header=TRUE,row.names=1)
 
 # Reading the RNA-read-counts
-RNA.read.counts = read.delim(file='RNA-read-counts.tsv',sep='\t',header=TRUE)
+RNA.read.counts = read.delim(file='RNA-read-counts.tsv',sep='\t',header=TRUE,row.names=1)
 
 # Reading the gmt file
 c2.cp.reactome.v7.5.1.symbols=read.delim('c2.cp.reactome.v7.5.1.symbols.gmt',sep='\t',header=FALSE)
