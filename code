@@ -311,23 +311,14 @@ print(pca$eig)
 fviz_eig(pca, addlabels = TRUE, ylim = c(0, 50))
 
 #print the PCA with coloured Cohort
-cohorts <- clinical.data$COHORT
-colors <- rep("red",length(cohorts))
-colors[cohorts == "Organ Donor (OPO)"] <- "black"
-plot(pca$ind$coord,col=colors,pch=19,cex=0.6)
-legend("bottomright", legend=c("Organ Donor (OPO)", "Postmortem"),
-       col=c("black", "red"), pch=19, cex=0.6)
+plot(pca$ind$coord,col=factor(Cohort),pch=19,cex=0.6)
+legend("bottomright", legend=levels(factor(Cohort)),
+       col=factor(levels(factor(Cohort))), pch=19, cex=0.6)
 
-#print the PCA with coloured hardy scale
-hardy <- clinical.data$DTHHRDY
-colors <- rep("black",length(hardy))
-colors[hardy == 1] <- "red"
-colors[hardy == 2] <- "green"
-colors[hardy == 3] <- "blue"
-colors[hardy == 4] <- "cyan"
-plot(pca$ind$coord,col=colors,pch=19,cex=0.6)
-legend("bottomright", legend=c("0", "1","2","3","4"),
-       col=c("black", "red","green","blue","cyan"), pch=19, cex=0.6)
+#print the PCA with coloured hardy scale -> useless
+plot(pca$ind$coord,col=factor(HardyScale),pch=19,cex=0.6)
+legend("bottomright", legend=levels(factor(HardyScale)),
+       col=factor(levels(factor(HardyScale))), pch=19, cex=0.6)
        
 ############### Question 2 (Deseq): 
 
