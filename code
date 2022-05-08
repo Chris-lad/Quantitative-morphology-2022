@@ -320,7 +320,9 @@ plot(pca$ind$coord,col=factor(HardyScale),pch=19,cex=0.6)
 legend("bottomright", legend=levels(factor(HardyScale)),
        col=factor(levels(factor(HardyScale))), pch=19, cex=0.6)
        
-############### Question 2 (Deseq): 
+#### PART 4 (Question 2)
+
+############ PART 4.1: ASSOCIATION OF MORPHOLOGICAL CLUSTERS TO CLINICAL VARIABLES
 
 # create the deseqdataset object, change variable design for every variable in clinical.data (Age, Hght etc)
 dds <- DESeqDataSetFromMatrix(countData=t(morphological.counts), 
@@ -344,21 +346,31 @@ head(res, 10)
 # plot
 plotMA(res)
 
-#Version automatique, teste toutes les variables, imprime deux types de plots: padj et log2fold vs mean et stocke valeurs dans une data.frame
+###Automatic version, computes the padj and log2 fold change for the clusters associated to the technical and health/demographics variables,
+###adds for  each cluster for each variable the padj value to the dataframe VarvsMorpho and the log2 fold change to the dataframe log2Morpho
+###morphs will contain the lists of significantly associated clusters for each variable (ie. padj < 0.1)
 
+#sort the clusters by increasing padj value and filter out ones of padj >= 0.1
 sign_padj <- function(res){
   sorted_padj <- res[res$padj<0.1 & is.na(res$padj) == FALSE,]
   increasing_padj <- sort(sorted_padj$padj,index.return=TRUE)$ix
   print(sorted_padj@rownames[increasing_padj])
 }
 
-releventVars <- c(2,3,4,5,7,8,9)
+releventVars <- c(2,3,4,5,7,8,9) #relevant variables, ie health/demographic and technical variables
+morphs <- rep(NA,length(releventVars))
 VarvsMorpho <- data.frame(matrix(
+  NA, nrow = ncol(morphological.counts),
+  ncol = length(releventVars)
+))
+log2Morpho <- data.frame(matrix(
   NA, nrow = ncol(morphological.counts),
   ncol = length(releventVars)
 ))
 rownames(VarvsMorpho) <- names(morphological.counts)
 names(VarvsMorpho) <- names(clinical.data)[releventVars]
+rownames(log2Morpho) <- names(morphological.counts)
+names(log2Morpho) <- names(clinical.data)[releventVars]
 for (i in 1:length(releventVars)){
   current_var <- releventVars[i]
   form <- as.formula(paste("~",names(clinical.data)[current_var]))
@@ -367,20 +379,22 @@ for (i in 1:length(releventVars)){
                                 design=form)
   dds <- DESeq(dds)
   res <- results(dds)
-  VarvsMorpho[,i] <- res$padj
-  plotMA(res,main=names(clinical.data)[current_var])
+  VarvsMorpho[,i] <- res$padj #add padj values
+  log2Morpho[,i] <- res$log2FoldChange #add log2 fold change values
+  plotMA(res,main=names(clinical.data)[current_var]) #plot of the log2 fold change vs the mean of the normalized counts
   print(names(clinical.data)[current_var])
-  sign_padj(res)
+  morphs[i] <- list(sign_padj(res)) #add list of significantly associated clusters to morphs
 }
 
+#scatterplots of padj vs the morphological cluster
 for (i in 1:ncol(VarvsMorpho)){
   plot(VarvsMorpho[,i], main = names(VarvsMorpho)[i],
        ylab="Adjusted p-value", xlab="Morphological cluster"
       )
-  abline(h = 0.1, col = "red")
+  abline(h = 0.1, col = "red") #add the line indicating padj = 0.1
 }
 
-
+#Analysis of association of clusters to confounded variables
 dds <- DESeqDataSetFromMatrix(countData = t(morphological.counts),
                               colData = clinical.data, 
                               design = ~AGE+COHORT+TRISCHD)
@@ -391,10 +405,40 @@ plotMA(res, main = "~AGE + COHORT + TRISCHD")
 plot(res$padj)
 abline(h = 0.1, col = "red")
 sign_padj(res)
+VarvsMorpho$confAGE <- res$padj #add a new column to VarvsMorpho corresponding to the padj values of the clusters for the confounded variables
+log2Morpho$confAGE <- res$log2FoldChange #add a new column to log2Morpho corresponding to the log2 fold change values of the clusters for the
+#confounded variables
+morphs <- append(morphs,list(sign_padj(res))) #add to morphs the list of significantly associated clusters to the confounded variables
 
-#Correlations des clusters: variables confondues
+#For each variable (including the confounded variables), create two lists of significantly associated clusters depending on the sign of their 
+#log2 fold change
 
-#fonction replaceNames cree une liste de noms correspondants au chiffre du cluster, plutot que le nom entier
+negativelog <- c()
+positivelog <- c()
+positiveMorphs <- rep(NA,length(releventVars))
+negativeMorphs <- rep(NA,length(releventVars))
+for (i in 1:length(morphs)){
+  if (i != 4){
+    log2folds <- log2Morpho[unlist(morphs[i]),i]
+    negativelog <- c()
+    positivelog <- c()
+    for (j in 1:length(morphs[[i]])){
+      if (log2folds[j] > 0){
+        positivelog <- c(positivelog,morphs[[i]][j])
+      }
+      else{
+        negativelog <- c(negativelog,morphs[[i]][j])
+      }
+    }
+    positiveMorphs[i] <- list(positivelog)
+    negativeMorphs[i] <- list(negativelog)
+  }
+}
+
+#Correlations of the clusters: confounded variables
+
+#replaceNames takes a list of morphological clusters and returns a list where "Mophological.cluster." has been removed from their names,
+#leaving only their associated number -> to avoid having overly full graphs where the names of the morphological clusters are necessary
 replaceNames <- function(df){
   futureNames <- rep(NA,ncol(df))
   for (i in 1:ncol(df)){
