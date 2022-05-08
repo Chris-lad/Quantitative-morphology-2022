@@ -402,7 +402,7 @@ dds <- DESeq(dds)
 res <- results(dds)
 VarvsMorpho[,i] <- res$padj
 plotMA(res, main = "~AGE + COHORT + TRISCHD")
-plot(res$padj)
+plot(res$padj, main = "~AGE + COHORT + TRISCHD")
 abline(h = 0.1, col = "red")
 sign_padj(res)
 VarvsMorpho$confAGE <- res$padj #add a new column to VarvsMorpho corresponding to the padj values of the clusters for the confounded variables
@@ -433,6 +433,26 @@ for (i in 1:length(morphs)){
     positiveMorphs[i] <- list(positivelog)
     negativeMorphs[i] <- list(negativelog)
   }
+}
+
+#Viewing the significantly associated clusters for each variable
+var_names <- names(clinical.data)[releventVars]
+var_names <- c(var_names,"AGE + COHORT + TRISCHD")
+for (i in 1:length(morphs)){
+  print(var_names[i])
+  print(morphs[[i]])
+}
+
+#Viewing the positively significantly associated clusters for each variable
+for (i in 1:length(positiveMorphs)){
+  print(var_names[i])
+  print(positiveMorphs[[i]])
+}
+
+#Viewing the negatively significantly associated clusters for each variable
+for (i in 1:length(negativeMorphs)){
+  print(var_names[i])
+  print(negativeMorphs[[i]])
 }
 
 ##Correlations of the clusters: confounded variables
