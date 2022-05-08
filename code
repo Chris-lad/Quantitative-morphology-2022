@@ -322,7 +322,7 @@ legend("bottomright", legend=levels(factor(HardyScale)),
        
 #### PART 4 (Question 2)
 
-############ PART 4.1: ASSOCIATION OF MORPHOLOGICAL CLUSTERS TO CLINICAL VARIABLES
+############ PARTS 4.1, 4.2 and 4.3 (Q2.1, Q2.2 and Q2.3)
 
 # create the deseqdataset object, change variable design for every variable in clinical.data (Age, Hght etc)
 dds <- DESeqDataSetFromMatrix(countData=t(morphological.counts), 
@@ -343,8 +343,8 @@ head(results(dds, tidy=TRUE))
 res <- res[order(res$padj),]
 head(res, 10)
 
-# plot
-plotMA(res)
+#plot of the log2 fold change vs the mean of the normalized counts
+plotMA(res) 
 
 ###Automatic version, computes the padj and log2 fold change for the clusters associated to the technical and health/demographics variables,
 ###adds for  each cluster for each variable the padj value to the dataframe VarvsMorpho and the log2 fold change to the dataframe log2Morpho
@@ -435,7 +435,7 @@ for (i in 1:length(morphs)){
   }
 }
 
-#Correlations of the clusters: confounded variables
+##Correlations of the clusters: confounded variables
 
 #replaceNames takes a list of morphological clusters and returns a list where "Mophological.cluster." has been removed from their names,
 #leaving only their associated number -> to avoid having overly full graphs where the names of the morphological clusters are necessary
