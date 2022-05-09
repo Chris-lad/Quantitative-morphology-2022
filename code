@@ -482,3 +482,64 @@ correlation = cor(confMorphs, method = "spearman")
 correlation <- round(correlation,2)
 corrplot(correlation, order = 'AOE', addCoef.col = 'black', tl.pos = 'd',
          cl.pos = 'n', col = COL2('PiYG'))
+         
+         
+#### PART 5 (Question 3)
+############ PART 5.1: Association of transcripts to morphological clusters
+         
+#create a dataset containing only the transcript counts
+RNA.reads <- RNA.read.counts[,-1]
+#compute the median average deviation (MAD) for each gene
+relevantTrans <- c()
+for (i in 1:nrow(RNA.reads)){
+  relevantTrans <- c(relevantTrans,mad(as.numeric(RNA.reads[i,])))
+}
+#get the frequencies of each value of MAD
+table(relevantTrans)
+#keep only genes with MAD > 11
+RNA.reads <- RNA.reads[relevantTrans > 11,]
+#given RNA-seq dataset has organ IDs with dots, whereas morphological.clusters has - -> replace the dots
+futureNames <- c()
+for (gtexID in names(RNA.reads)){
+  futureNames <- c(futureNames,gsub("\\.","-",gtexID))
+}
+names(RNA.reads) <- futureNames
+#create a list that will contain the names of significantly associated genes for each cluster
+transcripts <- rep(NA,ncol(morphological.frequencies))
+#padjRNA will contain the padj value of each gene for each morphological cluster
+padjRNA <- data.frame(matrix(
+  NA, nrow = nrow(RNA.reads),
+  ncol = ncol(morphological.frequencies)
+))
+#log2RNA will contain the log2 fold change value of each gene for each morphological cluster
+log2RNA <- data.frame(matrix(
+  NA, nrow = nrow(RNA.reads),
+  ncol = ncol(morphological.frequencies)
+))
+rownames(padjRNA) <- rownames(RNA.reads)
+names(padjRNA) <- names(morphological.frequencies)
+rownames(log2RNA) <- rownames(RNA.reads)
+names(log2RNA) <- names(morphological.frequencies)
+
+for (i in 1:ncol(morphological.frequencies)){
+  if (i != 15 & i != 59){ #don't take the morphological clusters 14 and 58 into account -> muscles and technical artefacts
+    morph <- names(morphological.frequencies)[i]
+    print(morph)
+    form <- as.formula(paste("~",morph,"+",
+                             names(morphological.frequencies)[15]
+                             ,"+",names(morphological.frequencies)[59])) #clusters 14 and 58 and technical confounders
+    dds <- DESeqDataSetFromMatrix(countData = RNA.reads,
+                                  colData = morphological.frequencies, 
+                                  design=form)
+    dds <- DESeq(dds)
+    res <- results(dds)
+    padjRNA[,i] <- res$padj/(ncol(morphological.frequencies)-2) #padj value with Bonferroni multiple test correction: alpha/number of tests
+    log2RNA[,i] <- res$log2FoldChange #log2 fold change value
+    transcripts[i] <- list(sign_padj(res)) #significantly associated genes
+  }
+}
+
+for (len in transcripts){
+  print(length(len)) #total number of significantly associated genes
+  print(len[1:10]) #10 most up- or downregulated genes
+}
