@@ -498,6 +498,17 @@ corrplot(correlation, order = 'AOE', addCoef.col = 'black', tl.pos = 'd',
          
 #### PART 5 (Question 3)
 ############ PART 5.1: Association of transcripts to morphological clusters
+
+#create a dataframe containing the frequency of each clusters in a given organ
+N <- nrow(morphological.counts)
+M <- ncol(morphological.counts)
+morphological.frequencies <- data.frame(rep(list(rep(NA,N)),M))
+names(morphological.frequencies) <- names(morphological.counts)
+rownames(morphological.frequencies) <- rownames(morphological.counts)
+for (i in 1:nrow(morphological.counts)){
+  row_Sum <- sum(morphological.counts[i,])
+  morphological.frequencies[i,] <- morphological.counts[i,]/row_Sum
+}
          
 #remove first column of descriptions
 RNA.reads <- RNA.read.counts[,-1]
