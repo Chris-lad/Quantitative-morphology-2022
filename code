@@ -599,3 +599,59 @@ for (i in 1:length(negativeTrans)){
     }
   }
 }
+
+#remove NULL values and replace them by NA
+for (i in 1:length(positiveTrans)){
+  if (length(positiveTrans[[i]]) == 0){
+    positiveTrans[i] <- NA
+  } 
+  if (length(negativeTrans[[i]]) == 0){
+    negativeTrans[i] <- NA
+  } 
+}
+
+#sameMorphs will contain lists of morphological clusters with the same downregulated and upregulated genes (taking order into account)
+sameMorphs <- c()
+added <- c()
+for (i in 1:length(relevantMorphos)){
+  if (i %in% added == FALSE){
+    added <- c(added,i)
+    same <- c(i)
+    if ((i+1) <= length(relevantMorphos)){
+      for (j in (i+1):length(relevantMorphos)){
+        sameNeg <- FALSE
+        samePos <- FALSE
+        if (any(is.na(positiveTrans[[i]])) & any(is.na(positiveTrans[[j]]))){
+          samePos <- TRUE
+        }
+        if (!(any(is.na(positiveTrans[[i]])) | any(is.na(positiveTrans[[j]])))){
+          if (all(positiveTrans[[i]] == positiveTrans[[j]])){
+            samePos <- TRUE
+          }
+        }
+        if (any(is.na(negativeTrans[[i]])) & any(is.na(negativeTrans[[j]]))){
+          sameNeg <- TRUE
+        }
+        if (!(any(is.na(negativeTrans[[i]])) | any(is.na(negativeTrans[[j]])))){
+          if (all(negativeTrans[[i]] == negativeTrans[[j]])){
+            sameNeg <- TRUE
+          }
+        }
+        if (sameNeg & samePos){
+          same <- c(same,j)
+          added <- c(added,j)
+        }
+      }
+    }
+    sameMorphs <- c(sameMorphs,list(same))
+  }
+}
+
+#compute the correlation of the clusters with the same up and downregulated genes
+for (morphs in sameMorphs){
+  print(morphs)
+  subMorphs <- as.data.frame(morphological.frequencies[,morphs])
+  if (ncol(subMorphs) > 1){
+    corrplot(cor(subMorphs,method="spearman"))
+  }
+}
