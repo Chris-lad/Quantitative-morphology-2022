@@ -855,7 +855,15 @@ print(negativesets[which(names(rankMetric) == "Mophological.cluster.45")])
 
 #Fifth ranking Metric = -sign(log2 fold change)*log10(p-value)
 
-rankMetric <- pRNA
+rankMetric <- data.frame(matrix(
+  NA, nrow = nrow(RNA.reads),
+  ncol = ncol(morphological.frequencies)-1
+))
+rownames(rankMetric) <- rownames(RNA.reads)
+names(rankMetric) <- c(relevantMorphos,"Mophological.cluster.58")
+for (i in 1:ncol(rankMetric)){
+  rankMetric[,i] <- -sign(log2RNA[,i])*log10(pRNA[,i])
+}
 geneSetAnalysis <- fgseaAnalysis(rankMetric)
 padjset <- geneSetAnalysis$padj
 ESset <- geneSetAnalysis$ES
