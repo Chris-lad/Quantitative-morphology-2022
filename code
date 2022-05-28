@@ -11,6 +11,7 @@ library(hrbrthemes)
 library(devtools)
 library(factoextra)
 library(FactoMineR)
+library(fgsea)
 
 
 # Reading the clinical data, taking as rownames the unique IDs of the organs (SMPLID)
@@ -689,326 +690,184 @@ for (morphs in sameMorphs){
 
 ############ PART 5.2: Association of REACTOME gene sets to morphological clusters
 
-geneNames <- RNA.read.counts[,1][relevantTrans >= 1.5] #get the names of the genes that weren't filtered out
+geneNames <- RNA.read.counts[,1][relevantTrans >= 1.5]
 
-pathways <- gmtPathways("c2.cp.reactome.v7.5.1.symbols.gmt") #read the .gmt file using fgsea
+pathways <- gmtPathways("c2.cp.reactome.v7.5.1.symbols.gmt")
 
-#create data.frames for the adjusted p-value, enrichment score and normalized enrichment score
-padjset <- data.frame(matrix(
-  NA, nrow = length(pathways),
-  ncol = ncol(morphological.frequencies)-2
-))
-rownames(padjset) <- names(pathways)
-names(padjset) <- relevantMorphos
-
-NESset <- data.frame(matrix(
-  NA, nrow = length(pathways),
-  ncol = ncol(morphological.frequencies)-2
-))
-rownames(NESset) <- names(pathways)
-names(NESset) <- relevantMorphos
-
-ESset <- data.frame(matrix(
-  NA, nrow = length(pathways),
-  ncol = ncol(morphological.frequencies)-2
-))
-rownames(ESset) <- names(pathways)
-names(ESset) <- relevantMorphos
-
-#First metric: adjusted p-value
-for (i in 1:length(relevantMorphos)){
-  morph <- relevantMorphos[i]
-  print(morph)
-  rank <- padjRNA[,morph]
-  names(rank) <- geneNames
-  rank <- na.omit(rank)
-  sortrank <- sort(rank)
-  fgseaRes <- fgsea(pathways = pathways, 
-                    stats    = sortrank,
-                    minSize  = 15,
-                    maxSize  = 500)
-  padjset[fgseaRes$pathway,i] <- fgseaRes$padj
-  ESset[fgseaRes$pathway,i] <- fgseaRes$ES
-  NESset[fgseaRes$pathway,i] <- fgseaRes$NES
-}
-
-#get the significantly associated gene sets for all morphological clusters
-genesets <- rep(NA,ncol(padjsetp))
-for (i in 1:length(relevantMorphos)){
-  padjList <- padjset[,i]
-  names(padjList) <- rownames(padjset)
-  genesets[i] <- list(sign_padj(padjList),0.05/63)
-}
-
-for (i in 1:length(genesets)){
-  print(relevantMorphos[i])
-  print(length(genesets[[i]]))
-}
-
-NESsign <- sortLogs(genesets,NESset)
-positivesets <- ESsign[,1]
-negativesets <- ESsign[,2]
-print(positivesets)
-print(negativesets)
-#Positive control: Cluster 45
-print(positivesets[45])
-print(negativesets[45])
-
-#DESeq2 analysis on the artefact cluster
 dds <- DESeqDataSetFromMatrix(countData = RNA.reads,
                               colData = morphological.frequencies, 
                               design=~Mophological.cluster.14 + 
                                 Mophological.cluster.58)
 dds <- DESeq(dds)
 res <- results(dds)
-sign14 <- res$padj
-names(sign14) <- rownames(RNA.reads)
-print(sign_padj(sign14,0.1/63))
+padjRNA$Mophological.cluster.58 <- res$padj
+pRNA$Mophological.cluster.58 <- res$pvalue
+waldRNA$Mophological.cluster.58 <- res$stat
+log2RNA$Mophological.cluster.58 <- res$log2FoldChange
 
-#fgsea analysis for the artefact cluster: Negative control
-rank <- res$padj
-names(rank) <- geneNames
-rank <- na.omit(rank)
-sortrank <- sort(rank)
 
-fgseaRes <- fgsea(pathways = pathways, 
-                  stats    = sortrank,
-                  minSize  = 15,
-                  maxSize  = 500, scoreType = "pos")
-padj14 <- fgseaRes$padj
-names(padj14) <- fgseaRes$pathway
-NES14 <- fgseaRes$NES
-sets14 <- list(sign_padj(padj14,0.05/63))
-print(sets14)
-
-#Significantly associated gene sets with positive NES
-for (i in 1:length(NES14)){
-  if (NES14[i] >= 0 & padj14[i] < 0.05/63){
-    print(fgseaRes$pathway[i])
+fgseaAnalysis <- function(rankMetric,verbose=TRUE){
+  padjset <- data.frame(matrix(
+    NA, nrow = length(pathways),
+    ncol = ncol(rankMetric)
+  ))
+  rownames(padjset) <- names(pathways)
+  names(padjset) <- names(rankMetric)
+  
+  NESset <- data.frame(matrix(
+    NA, nrow = length(pathways),
+    ncol =  ncol(rankMetric)
+  ))
+  rownames(NESset) <- names(pathways)
+  names(NESset) <- names(rankMetric)
+  
+  ESset <- data.frame(matrix(
+    NA, nrow = length(pathways),
+    ncol = ncol(rankMetric)
+  ))
+  rownames(ESset) <- names(pathways)
+  names(ESset) <- names(rankMetric)
+  
+  for (i in 1:ncol(rankMetric)){
+    morph <- names(rankMetric)[i]
+    if (verbose == TRUE){
+      print(morph)
+    }
+    rank <- rankMetric[,morph]
+    names(rank) <- geneNames
+    rank <- na.omit(rank)
+    sortrank <- sort(rank,decreasing = TRUE)
+    fgseaRes <- fgsea(pathways = pathways, 
+                      stats    = sortrank,
+                      minSize  = 15,
+                      maxSize  = 500)
+    padjset[fgseaRes$pathway,i] <- fgseaRes$padj
+    ESset[fgseaRes$pathway,i] <- fgseaRes$ES
+    NESset[fgseaRes$pathway,i] <- fgseaRes$NES
+    if (verbose == TRUE){
+      print("Done")
+    }
   }
+  result <- data.frame(matrix(ncol=0,nrow=length(pathways)))
+  result$padj <- padjset
+  result$NES <- NESset
+  result$ES <- ESset
+  return(result)
 }
 
+
+extractSets <- function(padjset){
+  genesets <- rep(NA,ncol(padjset))
+  for (i in 1:ncol(padjset)){
+    padjList <- padjset[,i]
+    names(padjList) <- rownames(padjset)
+    genesets[i] <- list(sign_padj(padjList),0.05/63)
+  }
+  return(genesets)
+}
+
+#First ranking Metric = log10(adjusted p-value)
+
+rankMetric <- as.data.frame(lapply(padjRNA,log10))
+geneSetAnalysis <- fgseaAnalysis(rankMetric)
+padjset <- geneSetAnalysis$padj
+ESset <- geneSetAnalysis$ES
+NESset <- geneSetAnalysis$NES
+genesets <- extractSets(padjset)
+NESsign <- sortLogs(genesets,NESset)
+positivesets <- ESsign[,1]
+negativesets <- ESsign[,2]
+print("Negative control: Morphological cluster 58")
+print(positivesets[which(names(rankMetric) == "Mophological.cluster.58")])
+print(negativesets[which(names(rankMetric) == "Mophological.cluster.58")])
+print("Positive control: Morphological cluster 45")
+print(positivesets[which(names(rankMetric) == "Mophological.cluster.45")])
+print(negativesets[which(names(rankMetric) == "Mophological.cluster.45")])
 #BUT: too many ties in the ranking (warnings returned by fgsea) -> doesn't take into account whether the genes are down- or up-regulated
 
-#Second metric: logfold change
-for (i in 1:length(relevantMorphos)){
-  morph <- relevantMorphos[i]
-  print(morph)
-  rank <- log2RNA[,morph]
-  names(rank) <- geneNames
-  rank <- na.omit(rank)
-  sortrank <- sort(rank, decreasing = TRUE)
-  fgseaRes <- fgsea(pathways = pathways, 
-                    stats    = sortrank,
-                    minSize  = 15,
-                    maxSize  = 500)
-  padjset[fgseaRes$pathway,i] <- fgseaRes$padj
-  ESset[fgseaRes$pathway,i] <- fgseaRes$ES
-  NESset[fgseaRes$pathway,i] <- fgseaRes$NES
-}
+#Second ranking Metric = log2 fold change
 
-#get the significantly associated gene sets for all morphological clusters
-genesets <- rep(NA,ncol(padjsetp))
-for (i in 1:length(relevantMorphos)){
-  padjList <- padjset[,i]
-  names(padjList) <- rownames(padjset)
-  genesets[i] <- list(sign_padj(padjList),0.05/63)
-}
-
-for (i in 1:length(genesets)){
-  print(relevantMorphos[i])
-  print(length(genesets[[i]]))
-}
-
+rankMetric <- log2RNA
+geneSetAnalysis <- fgseaAnalysis(rankMetric)
+padjset <- geneSetAnalysis$padj
+ESset <- geneSetAnalysis$ES
+NESset <- geneSetAnalysis$NES
+genesets <- extractSets(padjset)
 NESsign <- sortLogs(genesets,NESset)
 positivesets <- ESsign[,1]
 negativesets <- ESsign[,2]
-print(positivesets)
-print(negativesets)
-#Positive control: Cluster 45
-print(positivesets[45])
-print(negativesets[45])
-
-#DESeq2 analysis on the artefact cluster
-dds <- DESeqDataSetFromMatrix(countData = RNA.reads,
-                              colData = morphological.frequencies, 
-                              design=~Mophological.cluster.14 + 
-                                Mophological.cluster.58)
-dds <- DESeq(dds)
-res <- results(dds)
-sign14 <- res$padj
-names(sign14) <- rownames(RNA.reads)
-print(sign_padj(sign14,0.1/63))
-
-#fgsea analysis for the artefact cluster: Negative control
-rank <- res$log2FoldChange
-names(rank) <- geneNames
-rank <- na.omit(rank)
-sortrank <- sort(rank, decreasing = TRUE)
-
-fgseaRes <- fgsea(pathways = pathways, 
-                  stats    = sortrank,
-                  minSize  = 15,
-                  maxSize  = 500, scoreType = "pos")
-padj14 <- fgseaRes$padj
-names(padj14) <- fgseaRes$pathway
-NES14 <- fgseaRes$NES
-sets14 <- list(sign_padj(padj14,0.05/63))
-print(sets14)
-
-#Significantly associated gene sets with positive NES
-for (i in 1:length(NES14)){
-  if (NES14[i] >= 0 & padj14[i] < 0.05/63){
-    print(fgseaRes$pathway[i])
-  }
-}
-
+print("Negative control: Morphological cluster 58")
+print(positivesets[which(names(rankMetric) == "Mophological.cluster.58")])
+print(negativesets[which(names(rankMetric) == "Mophological.cluster.58")])
+print("Positive control: Morphological cluster 45")
+print(positivesets[which(names(rankMetric) == "Mophological.cluster.45")])
+print(negativesets[which(names(rankMetric) == "Mophological.cluster.45")])
 #BUT: doesn't take into account whether the gene is significantly regulated
-#Third metric: sign of the log fold times the log10 of the adjusted p-value
-for (i in 1:length(relevantMorphos)){
-  morph <- relevantMorphos[i]
-  print(morph)
-  rank <- sign(log2RNA[,morph])*log10(padjRNA[,morph])
-  names(rank) <- geneNames
-  rank <- na.omit(rank)
-  sortrank <- sort(rank)
-  fgseaRes <- fgsea(pathways = pathways, 
-                    stats    = sortrank,
-                    minSize  = 15,
-                    maxSize  = 500)
-  padjset[fgseaRes$pathway,i] <- fgseaRes$padj
-  ESset[fgseaRes$pathway,i] <- fgseaRes$ES
-  NESset[fgseaRes$pathway,i] <- fgseaRes$NES
-}
 
-#get the significantly associated gene sets for all morphological clusters
-genesets <- rep(NA,ncol(padjsetp))
-for (i in 1:length(relevantMorphos)){
-  padjList <- padjset[,i]
-  names(padjList) <- rownames(padjset)
-  genesets[i] <- list(sign_padj(padjList),0.05/63)
-}
 
-for (i in 1:length(genesets)){
-  print(relevantMorphos[i])
-  print(length(genesets[[i]]))
-}
+#Third ranking Metric = -sign(log2 fold change)*log10(adjusted p-value)
 
+rankMetric <- data.frame(matrix(
+  NA, nrow = nrow(RNA.reads),
+  ncol = ncol(morphological.frequencies)-1
+))
+rownames(rankMetric) <- rownames(RNA.reads)
+names(rankMetric) <- c(relevantMorphos,"Mophological.cluster.58")
+for (i in 1:ncol(rankMetric)){
+  rankMetric[,i] <- -sign(log2RNA[,i])*log10(padjRNA[,i])
+}
+geneSetAnalysis <- fgseaAnalysis(rankMetric)
+padjset <- geneSetAnalysis$padj
+ESset <- geneSetAnalysis$ES
+NESset <- geneSetAnalysis$NES
+genesets <- extractSets(padjset)
 NESsign <- sortLogs(genesets,NESset)
 positivesets <- ESsign[,1]
 negativesets <- ESsign[,2]
-print(positivesets)
-print(negativesets)
-#Positive control: Cluster 45
-print(positivesets[45])
-print(negativesets[45])
-
-#DESeq2 analysis on the artefact cluster
-dds <- DESeqDataSetFromMatrix(countData = RNA.reads,
-                              colData = morphological.frequencies, 
-                              design=~Mophological.cluster.14 + 
-                                Mophological.cluster.58)
-dds <- DESeq(dds)
-res <- results(dds)
-sign14 <- res$padj
-names(sign14) <- rownames(RNA.reads)
-print(sign_padj(sign14,0.1/63))
-
-#fgsea analysis for the artefact cluster: Negative control
-rank <- sign(res$log2FoldChange)*log10(res$padj)
-names(rank) <- geneNames
-rank <- na.omit(rank)
-sortrank <- sort(rank)
-
-fgseaRes <- fgsea(pathways = pathways, 
-                  stats    = sortrank,
-                  minSize  = 15,
-                  maxSize  = 500, scoreType = "pos")
-padj14 <- fgseaRes$padj
-names(padj14) <- fgseaRes$pathway
-NES14 <- fgseaRes$NES
-sets14 <- list(sign_padj(padj14,0.05/63))
-print(sets14)
-
-#Significantly associated gene sets with positive NES
-for (i in 1:length(NES14)){
-  if (NES14[i] >= 0 & padj14[i] < 0.05/63){
-    print(fgseaRes$pathway[i])
-  }
-}
-
+print("Negative control: Morphological cluster 58")
+print(positivesets[which(names(rankMetric) == "Mophological.cluster.58")])
+print(negativesets[which(names(rankMetric) == "Mophological.cluster.58")])
+print("Positive control: Morphological cluster 45")
+print(positivesets[which(names(rankMetric) == "Mophological.cluster.45")])
+print(negativesets[which(names(rankMetric) == "Mophological.cluster.45")])
 #BUT: too many similar p-values, a number of gene sets are significantly associated to all clusters, with similar NES values
-#Fourth metric: Wald test t-statistic
-for (i in 1:length(relevantMorphos)){
-  morph <- relevantMorphos[i]
-  print(morph)
-  rank <- waldRNA[,morph]
-  names(rank) <- geneNames
-  rank <- na.omit(rank)
-  sortrank <- sort(rank, decreasing = TRUE)
-  fgseaRes <- fgsea(pathways = pathways, 
-                    stats    = sortrank,
-                    minSize  = 15,
-                    maxSize  = 500)
-  padjset[fgseaRes$pathway,i] <- fgseaRes$padj
-  ESset[fgseaRes$pathway,i] <- fgseaRes$ES
-  NESset[fgseaRes$pathway,i] <- fgseaRes$NES
-}
 
-#get the significantly associated gene sets for all morphological clusters
-genesets <- rep(NA,ncol(padjsetp))
-for (i in 1:length(relevantMorphos)){
-  padjList <- padjset[,i]
-  names(padjList) <- rownames(padjset)
-  genesets[i] <- list(sign_padj(padjList),0.05/63)
-}
 
-for (i in 1:length(genesets)){
-  print(relevantMorphos[i])
-  print(length(genesets[[i]]))
-}
+#Fourth ranking Metric = wald test t-statistic
 
+rankMetric <- waldRNA
+geneSetAnalysis <- fgseaAnalysis(rankMetric)
+padjset <- geneSetAnalysis$padj
+ESset <- geneSetAnalysis$ES
+NESset <- geneSetAnalysis$NES
+genesets <- extractSets(padjset)
 NESsign <- sortLogs(genesets,NESset)
 positivesets <- ESsign[,1]
 negativesets <- ESsign[,2]
-print(positivesets)
-print(negativesets)
-#Positive control: Cluster 45
-print(positivesets[45])
-print(negativesets[45])
-
-#DESeq2 analysis on the artefact cluster
-dds <- DESeqDataSetFromMatrix(countData = RNA.reads,
-                              colData = morphological.frequencies, 
-                              design=~Mophological.cluster.14 + 
-                                Mophological.cluster.58)
-dds <- DESeq(dds)
-res <- results(dds)
-sign14 <- res$padj
-names(sign14) <- rownames(RNA.reads)
-print(sign_padj(sign14,0.1/63))
-
-#fgsea analysis for the artefact cluster: Negative control
-rank <- res$stat
-names(rank) <- geneNames
-rank <- na.omit(rank)
-sortrank <- sort(rank, decreasing = TRUE)
-
-fgseaRes <- fgsea(pathways = pathways, 
-                  stats    = sortrank,
-                  minSize  = 15,
-                  maxSize  = 500, scoreType = "pos")
-padj14 <- fgseaRes$padj
-names(padj14) <- fgseaRes$pathway
-NES14 <- fgseaRes$NES
-sets14 <- list(sign_padj(padj14,0.05/63))
-print(sets14)
-
-#Significantly associated gene sets with positive NES
-for (i in 1:length(NES14)){
-  if (NES14[i] >= 0 & padj14[i] < 0.05/63){
-    print(fgseaRes$pathway[i])
-  }
-}
-
+print("Negative control: Morphological cluster 58")
+print(positivesets[which(names(rankMetric) == "Mophological.cluster.58")])
+print(negativesets[which(names(rankMetric) == "Mophological.cluster.58")])
+print("Positive control: Morphological cluster 45")
+print(positivesets[which(names(rankMetric) == "Mophological.cluster.45")])
+print(negativesets[which(names(rankMetric) == "Mophological.cluster.45")])
 #BUT: too many similar p-values, a number of gene sets are significantly associated to all clusters, similar NES values
+
+
+#Fifth ranking Metric = -sign(log2 fold change)*log10(p-value)
+
+rankMetric <- pRNA
+geneSetAnalysis <- fgseaAnalysis(rankMetric)
+padjset <- geneSetAnalysis$padj
+ESset <- geneSetAnalysis$ES
+NESset <- geneSetAnalysis$NES
+genesets <- extractSets(padjset)
+NESsign <- sortLogs(genesets,NESset)
+positivesets <- ESsign[,1]
+negativesets <- ESsign[,2]
+print("Negative control: Morphological cluster 58")
+print(positivesets[which(names(rankMetric) == "Mophological.cluster.58")])
+print(negativesets[which(names(rankMetric) == "Mophological.cluster.58")])
+print("Positive control: Morphological cluster 45")
+print(positivesets[which(names(rankMetric) == "Mophological.cluster.45")])
+print(negativesets[which(names(rankMetric) == "Mophological.cluster.45")])
+
