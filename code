@@ -694,6 +694,7 @@ geneNames <- RNA.read.counts[,1][relevantTrans >= 1.5]
 
 pathways <- gmtPathways("c2.cp.reactome.v7.5.1.symbols.gmt")
 
+##########Negative control: DESeq2 analysis of cluster 58
 dds <- DESeqDataSetFromMatrix(countData = RNA.reads,
                               colData = morphological.frequencies, 
                               design=~Mophological.cluster.14 + 
@@ -704,6 +705,7 @@ padjRNA$Mophological.cluster.58 <- res$padj
 pRNA$Mophological.cluster.58 <- res$pvalue
 waldRNA$Mophological.cluster.58 <- res$stat
 log2RNA$Mophological.cluster.58 <- res$log2FoldChange
+#####################################################
 
 
 fgseaAnalysis <- function(rankMetric,verbose=TRUE){
