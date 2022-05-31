@@ -881,3 +881,23 @@ print("Positive control: Morphological cluster 45")
 print(positivesets[which(names(rankMetric) == "Mophological.cluster.45")])
 print(negativesets[which(names(rankMetric) == "Mophological.cluster.45")])
 
+
+#sort the upregulated gene sets with respect to their frequency
+positiveTotal <- c()
+for (set in positivesets){
+  positiveTotal <- c(positiveTotal,set)
+}
+sort(table(positiveTotal),decreasing = TRUE)
+
+#sort the downregulated gene sets with respect to their frequency
+negativeTotal <- c()
+for (set in negativesets){
+  negativeTotal <- c(negativeTotal,set)
+}
+sort(table(negativeTotal),decreasing = TRUE)
+
+
+
+
+
+
