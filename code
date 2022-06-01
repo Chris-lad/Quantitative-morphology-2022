@@ -775,8 +775,8 @@ ESset <- geneSetAnalysis$ES
 NESset <- geneSetAnalysis$NES
 genesets <- extractSets(padjset)
 NESsign <- sortLogs(genesets,NESset)
-positivesets <- ESsign[,1]
-negativesets <- ESsign[,2]
+positivesets <- NESsign[,1]
+negativesets <- NESsign[,2]
 print("Negative control: Morphological cluster 58")
 print(positivesets[which(names(rankMetric) == "Mophological.cluster.58")])
 print(negativesets[which(names(rankMetric) == "Mophological.cluster.58")])
