@@ -13,6 +13,9 @@ library(factoextra)
 library(FactoMineR)
 library(fgsea)
 
+#setting the seed
+set.seed(5)
+
 
 # Reading the clinical data, taking as rownames the unique IDs of the organs (SMPLID)
 clinical.data = read.delim(file='clinical-data.tsv',sep ='\t',header=TRUE,row.names=1)
