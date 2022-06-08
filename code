@@ -419,16 +419,6 @@ padjMorph <- res$padj
 names(padjMorph) <- rownames(VarvsMorpho)
 morphs <- append(morphs,list(sign_padj(padjMorph))) #add to morphs the list of significantly associated clusters to the confounded variables
 
-#compute the correlations of significantly associated morphological clusters and print correlation plots
-for (i in 1:length(morphs)){
-  if (i != 4){
-    print(names(VarvsMorpho)[i])
-    clusters <- morphs[i]
-    corrplot(cor(morphological.counts[,unlist(clusters)],method="spearman"))
-    correlations <- cor(morphological.counts[,unlist(clusters)])
-  }
-}
-
 #For each variable (including the confounded variables), create two lists of significantly associated clusters depending on the sign of their 
 #log2 fold change
 
@@ -486,7 +476,7 @@ for (i in 1:length(negativeMorphs)){
   print(negativeMorphs[[i]])
 }
 
-##Correlations of the clusters: confounded variables
+##Correlations of the clusters
 
 #replaceNames takes a list of morphological clusters and returns a list where "Mophological.cluster." has been removed from their names,
 #leaving only their associated number -> to avoid having overly full graphs where the names of the morphological clusters are necessary
@@ -505,14 +495,30 @@ replaceNames <- function(df){
   return(futureNames)
 }
 
-confMorphs <- morphological.counts[,unlist(morphs[[8]])]
-names(confMorphs) <- replaceNames(confMorphs)
+#First type of correlation matrix representation
+for (i in 1:length(morphs)){
+  if (i != 4){
+    print(names(VarvsMorpho)[i])
+    clusters <- morphs[i]
+    corrplot(cor(morphological.counts[,unlist(clusters)],method="spearman"))
+  }
+}
+
+#Second type of correlation matrix representation
+for (i in 1:length(morphs)){
+  if (!(i == 4)){
+    print(names(VarvsMorpho)[i])
+    confMorphs <- morphological.counts[,unlist(morphs[[i]])]
+    names(confMorphs) <- replaceNames(confMorphs)
+    correlation = cor(confMorphs, method = "spearman")
+    correlation <- round(correlation,2)
+    corrplot(correlation, order = 'AOE', addCoef.col = 'black', tl.pos = 'd',
+             cl.pos = 'n', col = COL2('PiYG'))
+  }
+}
+
 cor.test(morphological.counts$Mophological.cluster.50,morphological.counts$Mophological.cluster.23)
-corrplot(cor(confMorphs,method="spearman"))
-correlation = cor(confMorphs, method = "spearman")
-correlation <- round(correlation,2)
-corrplot(correlation, order = 'AOE', addCoef.col = 'black', tl.pos = 'd',
-         cl.pos = 'n', col = COL2('PiYG'))
+
          
          
 #### PART 5 (Question 3)
@@ -714,6 +720,8 @@ log2RNA$Mophological.cluster.58 <- res$log2FoldChange
 
 rankMetric <- as.data.frame(lapply(padjRNA,log10))
 genesets <- c()
+positiveNES <- c()
+negativeNES <- c()
 for (morph in names(rankMetric)){
   print(morph)
   rank <- rankMetric[,morph]
@@ -725,7 +733,16 @@ for (morph in names(rankMetric)){
                                         pathways, sortedrank)
   mainPathways <- fgseaRes[pathway %in% collapsedPathways$mainPathways][
     order(-NES), pathway]
+  positiveNES <- c(positiveNES,list(fgseaRes[pathway %in% collapsedPathways$mainPathways][
+    NES > 0 & padj < 0.05/63, pathway]))
+  negativeNES <- c(negativeNES,list(fgseaRes[pathway %in% collapsedPathways$mainPathways][
+    NES < 0 & padj < 0.05/63, pathway]))
   genesets <- c(genesets,list(mainPathways))
+  if (morph == "Mophological.cluster.45" | morph == "Mophological.cluster.58"){
+    plot.new()
+    plotGseaTable(pathways[mainPathways], sortedrank, fgseaRes, 
+                  gseaParam=0.5)
+  }
   print("Done")
 }
 #BUT: too many ties in the ranking (warnings returned by fgsea) -> doesn't take into account whether the genes are down- or up-regulated
@@ -734,6 +751,8 @@ for (morph in names(rankMetric)){
 
 rankMetric <- log2RNA
 genesets <- c()
+positiveNES <- c()
+negativeNES <- c()
 for (morph in names(rankMetric)){
   print(morph)
   rank <- rankMetric[,morph]
@@ -745,7 +764,16 @@ for (morph in names(rankMetric)){
                                         pathways, sortedrank)
   mainPathways <- fgseaRes[pathway %in% collapsedPathways$mainPathways][
     order(-NES), pathway]
+  positiveNES <- c(positiveNES,list(fgseaRes[pathway %in% collapsedPathways$mainPathways][
+    NES > 0 & padj < 0.05/63, pathway]))
+  negativeNES <- c(negativeNES,list(fgseaRes[pathway %in% collapsedPathways$mainPathways][
+    NES < 0 & padj < 0.05/63, pathway]))
   genesets <- c(genesets,list(mainPathways))
+  if (morph == "Mophological.cluster.45" | morph == "Mophological.cluster.58"){
+    plot.new()
+    plotGseaTable(pathways[mainPathways], sortedrank, fgseaRes, 
+                  gseaParam=0.5)
+  }
   print("Done")
 }
 #BUT: doesn't take into account whether the gene is significantly regulated
@@ -763,6 +791,8 @@ for (i in 1:ncol(rankMetric)){
   rankMetric[,i] <- -sign(log2RNA[,i])*log10(padjRNA[,i])
 }
 genesets <- c()
+positiveNES <- c()
+negativeNES <- c()
 for (morph in names(rankMetric)){
   print(morph)
   rank <- rankMetric[,morph]
@@ -774,7 +804,16 @@ for (morph in names(rankMetric)){
                                         pathways, sortedrank)
   mainPathways <- fgseaRes[pathway %in% collapsedPathways$mainPathways][
     order(-NES), pathway]
+  positiveNES <- c(positiveNES,list(fgseaRes[pathway %in% collapsedPathways$mainPathways][
+    NES > 0 & padj < 0.05/63, pathway]))
+  negativeNES <- c(negativeNES,list(fgseaRes[pathway %in% collapsedPathways$mainPathways][
+    NES < 0 & padj < 0.05/63, pathway]))
   genesets <- c(genesets,list(mainPathways))
+  if (morph == "Mophological.cluster.45" | morph == "Mophological.cluster.58"){
+    plot.new()
+    plotGseaTable(pathways[mainPathways], sortedrank, fgseaRes, 
+                  gseaParam=0.5)
+  }
   print("Done")
 }
 #BUT: too many similar p-values
@@ -792,6 +831,8 @@ for (i in 1:ncol(rankMetric)){
 }
 
 genesets <- c()
+positiveNES <- c()
+negativeNES <- c()
 for (morph in names(rankMetric)){
   print(morph)
   rank <- rankMetric[,morph]
@@ -803,14 +844,36 @@ for (morph in names(rankMetric)){
                                         pathways, sortedrank)
   mainPathways <- fgseaRes[pathway %in% collapsedPathways$mainPathways][
     order(-NES), pathway]
+  positiveNES <- c(positiveNES,list(fgseaRes[pathway %in% collapsedPathways$mainPathways][
+    NES > 0 & padj < 0.05/63, pathway]))
+  negativeNES <- c(negativeNES,list(fgseaRes[pathway %in% collapsedPathways$mainPathways][
+    NES < 0 & padj < 0.05/63, pathway]))
   genesets <- c(genesets,list(mainPathways))
+  if (morph == "Mophological.cluster.45" | morph == "Mophological.cluster.58"){
+    plot.new()
+    plotGseaTable(pathways[mainPathways], sortedrank, fgseaRes, 
+                  gseaParam=0.5)
+  }
   print("Done")
 }
 
-plot.new()
-plotGseaTable(pathways[genesets[[which(names(rankMetric)=="Mophological.cluster.58")]]], sortedrank, fgseaRes, 
-              gseaParam = 0.5)
+for (i in 1:length(genesets)){
+  print(names(rankMetric)[i])
+  print(length(genesets[[i]]))
+}
+print(genesets)
+print(positiveNES)
+print(negativeNES)
 
-plot.new()
-plotGseaTable(pathways[genesets[[which(names(rankMetric)=="Mophological.cluster.58")]]], sortedrank, fgseaRes, 
-              gseaParam = 0.5)
+
+for (i in 1:ncol(rankMetric)){
+  if ("REACTOME_THE_ROLE_OF_GTSE1_IN_G2_M_PROGRESSION_AFTER_G2_CHECKPOINT" %in% genesets[[i]]){
+    print(names(rankMetric)[i])
+  }
+}
+
+for (i in 1:ncol(rankMetric)){
+  if ("REACTOME_CYTOKINE_SIGNALING_IN_IMMUNE_SYSTEM" %in% genesets[[i]]){
+    print(names(rankMetric)[i])
+  }
+}
