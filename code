@@ -1,7 +1,6 @@
 # Loading the packages
 library(DESeq2)
 library(edgeR)
-library(fgsea)
 library(qusage)
 library(ggplot2)
 library(corrplot)
@@ -27,7 +26,7 @@ morphological.counts = read.delim(file='morphological-counts.tsv',sep='\t',heade
 RNA.read.counts = read.delim(file='RNA-read-counts.tsv',sep='\t',header=TRUE,row.names=1)
 
 # Reading the gmt file
-c2.cp.reactome.v7.5.1.symbols=read.delim('c2.cp.reactome.v7.5.1.symbols.gmt',sep='\t',header=FALSE)
+pathways <- gmtPathways("c2.cp.reactome.v7.5.1.symbols.gmt")
 
 ## Creating a vector for each clinical variable
 Sex <- clinical.data$SEX
@@ -38,7 +37,6 @@ BMI <- clinical.data$BMI
 IschemicTime <- clinical.data$TRISCHD
 HardyScale <- clinical.data$DTHHRDY
 Cohort <- clinical.data$COHORT
-
 
 ## Checking if any NA in vector ---> should Return FALSE
 any(is.na(HardyScale))
@@ -69,13 +67,13 @@ text(x = 30,
      paste("Mean =", round(mean(Age))),
      col = "red",
      cex = 1)
-  
+
 text(x = 30,
      y = 22,
      paste("Median =", round(median(Age))),
      col = "blue",
      cex = 1)
-     
+
 print(median(Age))
 
 # histogram of Height, with mean line
@@ -120,9 +118,6 @@ shapiro.test(Weight)
 ## NORMALLY DISTRIBUTED AS ALL THE P-VALUES WERE VERY VERY LOW.
 ## WE CAN NOT ASSUME NORMALITY FOR THESE VARIABLES
 
-### Barlett test to verify the homogeneity of variances between the 5 non-constant variables (excluding SEX, which has a variance of 0)
-bartlett.test(list(Age, BMI, Height, Weight, IschemicTime))
-
 ## Printing the contingency table of the categorical variables 
 
 table(Cohort)
@@ -142,7 +137,7 @@ barplot(table(Cohort), xlab = 'Type of donor',
 ############ PART 3.2: Correlations between clinical variables
 
 # Visualization of the relation between variables
-#pairs(clinical_data) #--> ain't working bc variables(are not integer)
+#pairs(clinical_data) --> doesn't work because of the presence of non-numerical variables
 pairs(~ Age + Height + Weight + BMI + IschemicTime)
 
 # Creating a dataframe containing only the numerical variables. 
@@ -196,7 +191,7 @@ ggplot(clinical.data, aes(x=BMI, y=WGHT, color=COHORT)) +
   geom_point(size=6) +
   theme_ipsum()
 
-## 
+ ## 
 # --> Useless  # A basic scatterplot BMI vs Weight with color
 #     depending on Hardy scale
 ggplot(clinical.data, aes(x=BMI, y=WGHT, color=DTHHRDY)) + 
@@ -233,7 +228,7 @@ legend("bottomright",
        legend = levels(factor(HardyScale)),
        pch = 19,
        col = factor(levels(factor(HardyScale))))
-       
+
 #Grouped barplot for COHORT and DTHHRDY
 
 clinical.data$DTHHRDY <- as.factor(clinical.data$DTHHRDY)
@@ -288,18 +283,6 @@ chisq.test(clinical.data$COHORT,ventilator)
 #The two variables are therefore not independent
 #the events DTHHRDY = 0 and COHORT = "Organ Donor (OPO)" are
 #not independent     
-       
-
-## Plotting the scatter plot of correlation between the Age and all 
-## the variables in the morphological.count variable. 
-morph.num.var = subset(morphological.counts, select = -SMPLID)
-cor.mat.clin.morph = cor(num.var, morph.num.var)
-
-# Let us plot the correlation plot
-corrplot(cor.mat.clin.morph[,0:9], method='number', addCoef.col = 'black')
-
-corrplot(cor.mat.clin.morph[,0:9], addCoef.col = 'black', tl.pos = 'd',
-         cl.pos = 'n')
 
 #PCA analysis
 #create a dataset containing only numerical values
@@ -323,7 +306,7 @@ legend("bottomright", legend=levels(factor(Cohort)),
 plot(pca$ind$coord,col=factor(HardyScale),pch=19,cex=0.6)
 legend("bottomright", legend=levels(factor(HardyScale)),
        col=factor(levels(factor(HardyScale))), pch=19, cex=0.6)
-       
+
 #### PART 4 (Question 2)
 
 ############ PARTS 4.1, 4.2 and 4.3 (Q2.1, Q2.2 and Q2.3)
@@ -397,7 +380,7 @@ for (i in 1:length(releventVars)){
 for (i in 1:ncol(VarvsMorpho)){
   plot(VarvsMorpho[,i], main = names(VarvsMorpho)[i],
        ylab="Adjusted p-value", xlab="Morphological cluster"
-      )
+  )
   abline(h = 0.1, col = "red") #add the line indicating padj = 0.1
 }
 
@@ -411,7 +394,6 @@ VarvsMorpho[,i] <- res$padj
 plotMA(res, main = "~AGE + COHORT + TRISCHD")
 plot(res$padj, main = "~AGE + COHORT + TRISCHD")
 abline(h = 0.1, col = "red")
-sign_padj(res)
 VarvsMorpho$confAGE <- res$padj #add a new column to VarvsMorpho corresponding to the padj values of the clusters for the confounded variables
 log2Morpho$confAGE <- res$log2FoldChange #add a new column to log2Morpho corresponding to the log2 fold change values of the clusters for the
 #confounded variables
@@ -433,7 +415,6 @@ sortLogs <- function(elements,logs){
       negativelog <- c()
       positivelog <- c()
       for (j in 1:length(elements[[i]])){
-        print(log2folds[j])
         if (log2folds[j] > 0){
           positivelog <- c(positivelog,elements[[i]][j])
         }
@@ -462,6 +443,14 @@ var_names <- c(var_names,"AGE + COHORT + TRISCHD")
 for (i in 1:length(morphs)){
   print(var_names[i])
   print(morphs[[i]])
+}
+
+#Viewing the number of significantly associated clusters for each variable
+var_names <- names(clinical.data)[releventVars]
+var_names <- c(var_names,"AGE + COHORT + TRISCHD")
+for (i in 1:length(morphs)){
+  print(var_names[i])
+  print(length(morphs[[i]]))
 }
 
 #Viewing the positively significantly associated clusters for each variable
@@ -519,8 +508,8 @@ for (i in 1:length(morphs)){
 
 cor.test(morphological.counts$Mophological.cluster.50,morphological.counts$Mophological.cluster.23)
 
-         
-         
+
+
 #### PART 5 (Question 3)
 ############ PART 5.1: Association of transcripts to morphological clusters
 
@@ -534,7 +523,7 @@ for (i in 1:nrow(morphological.counts)){
   row_Sum <- sum(morphological.counts[i,])
   morphological.frequencies[i,] <- morphological.counts[i,]/row_Sum
 }
-         
+
 #remove first column of descriptions
 RNA.reads <- RNA.read.counts[,-1]
 
@@ -556,6 +545,10 @@ for (gtexID in names(RNA.reads)){
 names(RNA.reads) <- futureNames
 #list of significantly up or downregulated genes for each cluster except for 14 (muscle) and 58 (artefacts)
 transcripts <- rep(NA,ncol(morphological.frequencies)-2)
+
+#clusters we want to analyze
+relevantMorphos <- names(morphological.frequencies)[-c(15,59)]
+
 #data.frames of all padj, log2 fold change, wald test t-values and nominal (non-adjusted) p-values for each cluster and transcript
 #, except for clusters 14 and 58
 padjRNA <- data.frame(matrix(
@@ -583,19 +576,16 @@ names(waldRNA) <- relevantMorphos
 rownames(pRNA) <- rownames(RNA.reads)
 names(pRNA) <- relevantMorphos
 
-#clusters we want to analyze
-relevantMorphos <- names(morphological.frequencies)[-c(15,59)]
-
 #Actual analysis
 for (i in 1:length(relevantMorphos)){
   morph <- relevantMorphos[i]
   print(morph)
   form <- as.formula(paste("~",morph,"+",
-                             names(morphological.frequencies)[15]
-                             ,"+",names(morphological.frequencies)[59])) #"~cluster + Mophological.cluster.14 + Mophological.cluster.58"
+                           names(morphological.frequencies)[15]
+                           ,"+",names(morphological.frequencies)[59])) #"~cluster + Mophological.cluster.14 + Mophological.cluster.58"
   dds <- DESeqDataSetFromMatrix(countData = RNA.reads,
-                                  colData = morphological.frequencies, 
-                                  design=form)
+                                colData = morphological.frequencies, 
+                                design=form)
   dds <- DESeq(dds)
   res <- results(dds)
   padjRNA[,i] <- res$padj
@@ -700,8 +690,6 @@ for (morphs in sameMorphs){
 ############ PART 5.2: Association of REACTOME gene sets to morphological clusters
 
 geneNames <- RNA.read.counts[,1][relevantTrans >= 1.5]
-
-pathways <- gmtPathways("c2.cp.reactome.v7.5.1.symbols.gmt")
 
 ##########Negative control: DESeq2 analysis of cluster 58
 dds <- DESeqDataSetFromMatrix(countData = RNA.reads,
