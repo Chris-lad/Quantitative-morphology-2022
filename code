@@ -608,7 +608,19 @@ sortedTrans <- sortLogs(transcripts,log2RNA)
 positiveTrans <- sortedTrans[,1]
 negativeTrans <- sortedTrans[,2]
 
-#get list of upregulated genes, amongst all clusters
+#print up-regulated genes
+for (i in 1:length(relevantMorphos)){
+  print(relevantMorphos[i])
+  print(positiveTrans[[i]])
+}
+
+#print down-regulated genes
+for (i in 1:length(relevantMorphos)){
+  print(relevantMorphos[i])
+  print(negativeTrans[[i]])
+}
+
+#get list of up-regulated genes, among all clusters
 positiveGenes <- c()
 for (i in 1:length(positiveTrans)){
   for (g in positiveTrans[[i]]){
@@ -617,6 +629,7 @@ for (i in 1:length(positiveTrans)){
     }
   }
 }
+print(positiveGenes)
 
 #get list of downregulated genes, amongst all clusters
 negativeGenes <- c()
@@ -627,6 +640,7 @@ for (i in 1:length(negativeTrans)){
     }
   }
 }
+print(negativeGenes)
 
 #remove values of length 0 and replace them by NA
 for (i in 1:length(positiveTrans)){
@@ -675,6 +689,8 @@ for (i in 1:length(relevantMorphos)){
   }
 }
 
+print(sameMorphs)
+
 #compute the correlation of the clusters with the same up and downregulated genes
 for (morphs in sameMorphs){
   print(morphs)
@@ -683,6 +699,7 @@ for (morphs in sameMorphs){
     corrplot(cor(subMorphs,method="spearman"))
   }
 }
+#No results obtained from this correlation analysis
 
 ############ PART 5.2: Association of REACTOME gene sets to morphological clusters
 
