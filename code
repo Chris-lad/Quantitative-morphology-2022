@@ -130,7 +130,6 @@ barplot(table(HardyScale), xlab = 'Hardy Scale',
 barplot(table(Cohort), xlab = 'Type of donor',
         ylab = 'count', col='blue')
 
-
 ############ PART 3.2: Correlations between clinical variables
 
 # Visualization of the relation between variables
