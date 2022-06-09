@@ -1,10 +1,7 @@
 # Loading the packages
 library(DESeq2)
-library(edgeR)
-library(qusage)
 library(ggplot2)
 library(corrplot)
-library(lessR)
 library(ggcorrplot)
 library(hrbrthemes)
 library(devtools)
